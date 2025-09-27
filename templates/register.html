@@ -124,9 +124,11 @@
                     <div class="ml-3 text-sm">
                         <label for="terms" class="text-gray-700">
                             I agree to the
-                            <a href="/terms/" class="text-emerald-600 hover:text-emerald-800 underline">Terms of Service</a>
+                            <a href="/terms/" class="text-emerald-600 hover:text-emerald-800 underline">Terms of
+                                Service</a>
                             and
-                            <a href="/privacy/" class="text-emerald-600 hover:text-emerald-800 underline">Privacy Policy</a>
+                            <a href="/privacy/" class="text-emerald-600 hover:text-emerald-800 underline">Privacy
+                                Policy</a>
                         </label>
                     </div>
                 </div>
@@ -190,9 +192,17 @@
             border-radius: 2px;
         }
 
-        .strength-weak { background-color: #ef4444; }
-        .strength-medium { background-color: #f59e0b; }
-        .strength-strong { background-color: #10b981; }
+        .strength-weak {
+            background-color: #ef4444;
+        }
+
+        .strength-medium {
+            background-color: #f59e0b;
+        }
+
+        .strength-strong {
+            background-color: #10b981;
+        }
     </style>
 
     <script>
@@ -262,13 +272,13 @@
                 }
             }
 
-            password1.addEventListener('input', function() {
+            password1.addEventListener('input', function () {
                 updatePasswordStrength();
                 checkPasswordMatch();
                 updateSubmitButton();
             });
 
-            password2.addEventListener('input', function() {
+            password2.addEventListener('input', function () {
                 checkPasswordMatch();
                 updateSubmitButton();
             });

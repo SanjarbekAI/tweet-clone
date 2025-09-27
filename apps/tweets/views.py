@@ -6,5 +6,5 @@ class RedirectTweetsListView(RedirectView):
     url = reverse_lazy('tweets:list')
 
 class TweetsListView(TemplateView):
-    template_name = 'followers.html'
+    template_name = 'register.html'
 
