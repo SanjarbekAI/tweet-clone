@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comment System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* Custom CSS for Comment System */
+        * {
+            transition: all 0.3s ease;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        body {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        header {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .bg-white {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        button {
+            transform-origin: center;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        input:focus,
+        textarea:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            border-color: #6366f1;
+        }
+
+        .comment-card {
+            transform: translateY(10px);
+            opacity: 0;
+            animation: slideInUp 0.5s ease-out forwards;
+        }
+
+        @keyframes slideInUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                margin: 20px;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- HEADER -->
+    <header class="bg-white shadow-lg border-b-2 border-indigo-200">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold text-indigo-600">
+                        <i class="fas fa-comments mr-2"></i>Comment System
+                    </h1>
+                </div>
+
+                <nav class="flex items-center space-x-6">
+                    <!-- Navigation Links -->
+                    <div class="hidden md:flex space-x-6">
+                        <a href="#" onclick="showSection('comments')" class="nav-link text-gray-600 hover:text-indigo-600 transition-colors duration-300 font-medium">
+                            <i class="fas fa-comments mr-1"></i>Comments
+                        </a>
+                        <a href="#" onclick="showSection('mycomments')" class="nav-link text-gray-600 hover:text-indigo-600 transition-colors duration-300 font-medium">
+                            <i class="fas fa-edit mr-1"></i>My Comments
+                        </a>
+                        <a href="#" onclick="showSection('myaccount')" class="nav-link text-gray-600 hover:text-indigo-600 transition-colors duration-300 font-medium">
+                            <i class="fas fa-user-cog mr-1"></i>My Account
+                        </a>
+                    </div>
+
+                    <!-- User Info / Auth Buttons -->
+                    <div class="flex items-center space-x-3">
+                        <div id="userInfo" class="hidden items-center space-x-3 bg-indigo-50 px-4 py-2 rounded-full">
+                            <div class="w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                                <span id="userAvatar">U</span>
+                            </div>
+                            <span id="userName" class="font-semibold text-indigo-700">User</span>
+                            <button onclick="showUserProfile()" class="text-indigo-600 hover:text-indigo-800 transition-colors">
+                                <i class="fas fa-user-circle text-lg"></i>
+                            </button>
+                        </div>
+
+                        <div id="authButtons" class="flex space-x-2">
+                            <button onclick="showForm('login')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors duration-300 font-medium">
+                                <i class="fas fa-sign-in-alt mr-1"></i>Login
+                            </button>
+                            <button onclick="showForm('register')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg transition-colors duration-300 font-medium">
+                                <i class="fas fa-user-plus mr-1"></i>Register
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- LOGIN / REGISTER MODAL -->
+    <div id="authModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 max-w-md mx-4">
+            <div class="text-center mb-6">
+                <h2 id="formTitle" class="text-2xl font-bold text-gray-800">Login</h2>
+                <p class="text-gray-600 mt-2">Enter your credentials to continue</p>
+            </div>
+
+            <form id="authForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <input id="usernameInput" type="text" placeholder="Enter username"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input id="passwordInput" type="password" placeholder="Enter password"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                </div>
+
+                <div id="emailField" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input id="emailInput" type="email" placeholder="Enter email"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                </div>
+
+                <button type="button" onclick="submitAuth()"
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition-colors duration-300">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    <span id="submitText">Login</span>
+                </button>
+
+                <button type="button" onclick="closeModal()"
+                        class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-lg font-semibold transition-colors duration-300">
+                    Cancel
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- USER PROFILE MODAL -->
+    <div id="userModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 max-w-md mx-4">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-2xl mx-auto mb-4">
+                    <span id="profileAvatar">U</span>
+                </div>
+                <h2 id="profileName" class="text-2xl font-bold text-gray-800">Username</h2>
+                <p class="text-gray-600">Member since today</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total Comments:</span>
+                        <span id="totalComments" class="font-bold text-indigo-600">0</span>
+                    </div>
+                </div>
+
+                <button onclick="logout()"
+                        class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition-colors duration-300">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </button>
+
+                <button onclick="closeUserModal()"
+                        class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-lg font-semibold transition-colors duration-300">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Navigation Tabs (Mobile) -->
+        <div class="md:hidden mb-6">
+            <div class="grid grid-cols-3 gap-2 bg-white p-2 rounded-lg shadow">
+                <button onclick="showSection('comments')"
+                        class="tab-btn py-3 px-4 text-center rounded-lg font-medium transition-colors bg-indigo-500 text-white">
+                    Comments
+                </button>
+                <button onclick="showSection('mycomments')"
+                        class="tab-btn py-3 px-4 text-center rounded-lg font-medium transition-colors text-gray-600">
+                    My Comments
+                </button>
+                <button onclick="showSection('myaccount')"
+                        class="tab-btn py-3 px-4 text-center rounded-lg font-medium transition-colors text-gray-600">
+                    My Account
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- COMMENTS SECTION -->
+            <section id="commentsSection" class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <i class="fas fa-comments mr-3"></i>All Comments
+                    </h2>
+                    <p class="text-indigo-100 mt-2">See what others are saying</p>
+                </div>
+
+                <div class="p-6">
+                    <div id="commentsList" class="space-y-4 max-h-96 overflow-y-auto">
+                        <div class="text-center text-gray-500 py-8">
+                            <i class="fas fa-comment-slash text-4xl text-gray-300 mb-4"></i>
+                            <p>No comments yet. Be the first to comment!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MY COMMENTS SECTION -->
+            <section id="mycommentsSection" class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <i class="fas fa-edit mr-3"></i>My Comments
+                    </h2>
+                    <p class="text-emerald-100 mt-2">Share your thoughts with the world</p>
+                </div>
+
+                <div class="p-6">
+                    <!-- Comment Form -->
+                    <div id="commentForm" class="mb-6">
+                        <textarea id="commentInput" rows="4"
+                                  class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
+                                  placeholder="What's on your mind? Share your thoughts..."></textarea>
+                        <div class="flex justify-between items-center mt-4">
+                            <div class="text-sm text-gray-500">
+                                <span id="charCount">0</span>/500 characters
+                            </div>
+                            <button onclick="postComment()"
+                                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-300">
+                                <i class="fas fa-paper-plane mr-2"></i>Post Comment
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- My Comments List -->
+                    <div id="myCommentsList" class="space-y-4 max-h-80 overflow-y-auto">
+                        <div class="text-center text-gray-500 py-8">
+                            <i class="fas fa-edit text-4xl text-gray-300 mb-4"></i>
+                            <p>You haven't posted any comments yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MY ACCOUNT SECTION -->
+            <section id="myaccountSection" class="bg-white rounded-2xl shadow-lg overflow-hidden" style="display: none;">
+                <div class="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <i class="fas fa-user-cog mr-3"></i>My Account
+                    </h2>
+                    <p class="text-purple-100 mt-2">Manage your profile and settings</p>
+                </div>
+
+                <div class="p-6">
+                    <div id="accountNotLoggedIn" class="text-center text-gray-500 py-8">
+                        <i class="fas fa-user-lock text-4xl text-gray-300 mb-4"></i>
+                        <p class="mb-4">Please login to manage your account</p>
+                        <button onclick="showForm('login')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                            Login Now
+                        </button>
+                    </div>
+
+                    <div id="accountLoggedIn" class="hidden">
+                        <!-- Profile Header -->
+                        <div class="flex items-center space-x-6 mb-8 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl">
+                            <div class="w-24 h-24 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-3xl">
+                                <span id="accountAvatar">U</span>
+                            </div>
+                            <div>
+                                <h3 id="accountUsername" class="text-2xl font-bold text-gray-800">Username</h3>
+                                <p id="accountBio" class="text-gray-600 mt-1">No bio yet. Click edit to add one!</p>
+                                <div class="flex items-center space-x-4 mt-3 text-sm text-gray-500">
+                                    <span><i class="fas fa-calendar-alt mr-1"></i>Joined <span id="accountJoinDate">today</span></span>
+                                    <span><i class="fas fa-comments mr-1"></i><span id="accountTotalComments">0</span> comments</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profile Information -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="space-y-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-4">Personal Information</h4>
+
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <label class="text-sm font-medium text-gray-600 block mb-1">Full Name</label>
+                                    <div class="flex items-center justify-between">
+                                        <span id="displayFullName" class="text-gray-800">Not set</span>
+                                        <button onclick="editField('fullName')" class="text-indigo-500 hover:text-indigo-600">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <label class="text-sm font-medium text-gray-600 block mb-1">Username</label>
+                                    <div class="flex items-center justify-between">
+                                        <span id="displayUsername" class="text-gray-800">username</span>
+                                        <button onclick="editField('username')" class="text-indigo-500 hover:text-indigo-600">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <label class="text-sm font-medium text-gray-600 block mb-1">Age</label>
+                                    <div class="flex items-center justify-between">
+                                        <span id="displayAge" class="text-gray-800">Not set</span>
+                                        <button onclick="editField('age')" class="text-indigo-500 hover:text-indigo-600">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-4">Contact Information</h4>
+
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <label class="text-sm font-medium text-gray-600 block mb-1">Email</label>
+                                    <div class="flex items-center justify-between">
+                                        <span id="displayEmail" class="text-gray-800">email@example.com</span>
+                                        <button onclick="editField('email')" class="text-indigo-500 hover:text-indigo-600">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <label class="text-sm font-medium text-gray-600 block mb-1">Phone Number</label>
+                                    <div class="flex items-center justify-between">
+                                        <span id="displayPhone" class="text-gray-800">Not set</span>
+                                        <button onclick="editField('phone')" class="text-indigo-500 hover:text-indigo-600">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <label class="text-sm font-medium text-gray-600 block mb-1">Bio</label>
+                                    <div class="flex items-start justify-between">
+                                        <span id="displayBio" class="text-gray-800 flex-1 mr-3">Tell us about yourself...</span>
+                                        <button onclick="editField('bio')" class="text-indigo-500 hover:text-indigo-600 mt-1">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Account Actions -->
+                        <div class="border-t pt-6">
+                            <div class="flex flex-wrap gap-3">
+                                <button onclick="changePassword()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-key mr-2"></i>Change Password
+                                </button>
+                                <button onclick="exportData()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-download mr-2"></i>Export Data
+                                </button>
+                                <button onclick="deleteAccount()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-trash mr-2"></i>Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Edit Comment Modal -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-96 max-w-md mx-4">
+            <h3 class="text-xl font-bold mb-4">Edit Comment</h3>
+            <textarea id="editCommentInput" rows="4"
+                      class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"></textarea>
+            <div class="flex space-x-3 mt-4">
+                <button onclick="saveEdit()"
+                        class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg font-semibold transition-colors">
+                    Save
+                </button>
+                <button onclick="closeEditModal()"
+                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 rounded-lg font-semibold transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Field Modal -->
+    <div id="editFieldModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-96 max-w-md mx-4">
+            <h3 id="editFieldTitle" class="text-xl font-bold mb-4">Edit Field</h3>
+            <div id="editFieldContent">
+                <input id="editFieldInput" type="text"
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all mb-4">
+                <textarea id="editFieldTextarea" rows="4"
+                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none mb-4 hidden"></textarea>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="saveFieldEdit()"
+                        class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg font-semibold transition-colors">
+                    Save
+                </button>
+                <button onclick="closeFieldEditModal()"
+                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 rounded-lg font-semibold transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Info Modal (when clicking on username in comments) -->
+    <div id="userInfoModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 max-w-md mx-4">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-2xl mx-auto mb-4">
+                    <span id="userInfoAvatar">U</span>
+                </div>
+                <h2 id="userInfoName" class="text-2xl font-bold text-gray-800">Username</h2>
+                <p id="userInfoBio" class="text-gray-600 mt-2">User bio goes here</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-600">Member since:</span>
+                        <span id="userInfoJoinDate" class="font-medium text-gray-800">Today</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total Comments:</span>
+                        <span id="userInfoTotalComments" class="font-bold text-indigo-600">0</span>
+                    </div>
+                </div>
+
+                <button onclick="closeUserInfoModal()"
+                        class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-lg font-semibold transition-colors duration-300">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let loggedInUser = null;
+        let currentForm = "login";
+        let comments = [];
+        let myComments = [];
+        let editingCommentId = null;
+        let currentSection = 'comments';
+        let currentEditField = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStoredData();
+            updateCharCount();
+            showSection('comments');
+            setTimeout(initDemoComments, 1000);
+        });
+
+        // Character counter
+        document.getElementById('commentInput').addEventListener('input', updateCharCount);
+
+        function updateCharCount() {
+            const input = document.getElementById('commentInput');
+            const count = input.value.length;
+            document.getElementById('charCount').textContent = count;
+
+            if (count > 500) {
+                input.value = input.value.substring(0, 500);
+                document.getElementById('charCount').textContent = '500';
+            }
+        }
+
+        // Load stored data
+        function loadStoredData() {
+            const userData = localStorage.getItem('commentSystemUser');
+            const commentsData = localStorage.getItem('commentSystemComments');
+            const myCommentsData = localStorage.getItem('commentSystemMyComments');
+
+            if (userData) {
+                loggedInUser = JSON.parse(userData);
+                updateUIAfterLogin();
+            }
+
+            if (commentsData) {
+                comments = JSON.parse(commentsData);
+                renderComments();
+            }
+
+            if (myCommentsData) {
+                myComments = JSON.parse(myCommentsData);
+                renderMyComments();
+            }
+        }
+
+        // Save to localStorage
+        function saveToStorage() {
+            if (loggedInUser) {
+                localStorage.setItem('commentSystemUser', JSON.stringify(loggedInUser));
+            }
+            localStorage.setItem('commentSystemComments', JSON.stringify(comments));
+            localStorage.setItem('commentSystemMyComments', JSON.stringify(myComments));
+        }
+
+        // Show section
+        function showSection(section) {
+            currentSection = section;
+
+            // Hide all sections first
+            document.getElementById('commentsSection').style.display = 'none';
+            document.getElementById('mycommentsSection').style.display = 'none';
+            document.getElementById('myaccountSection').style.display = 'none';
+
+            // Reset all navigation styles
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('text-indigo-600');
+                link.classList.add('text-gray-600');
+            });
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-500', 'text-white');
+                btn.classList.add('text-gray-600');
+            });
+
+            // Show selected section and update navigation
+            if (section === 'comments') {
+                document.getElementById('commentsSection').style.display = 'block';
+                const commentsLink = document.querySelector('[onclick="showSection(\'comments\')"]');
+                if (commentsLink) {
+                    commentsLink.classList.add('text-indigo-600');
+                    commentsLink.classList.remove('text-gray-600');
+                }
+            } else if (section === 'mycomments') {
+                document.getElementById('mycommentsSection').style.display = 'block';
+                const myCommentsLink = document.querySelector('[onclick="showSection(\'mycomments\')"]');
+                if (myCommentsLink) {
+                    myCommentsLink.classList.add('text-indigo-600');
+                    myCommentsLink.classList.remove('text-gray-600');
+                }
+            } else if (section === 'myaccount') {
+                document.getElementById('myaccountSection').style.display = 'block';
+                const myAccountLink = document.querySelector('[onclick="showSection(\'myaccount\')"]');
+                if (myAccountLink) {
+                    myAccountLink.classList.add('text-indigo-600');
+                    myAccountLink.classList.remove('text-gray-600');
+                }
+                updateAccountSection();
+            }
+
+            // Update mobile tabs
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            if (section === 'comments' && tabBtns[0]) {
+                tabBtns[0].classList.add('bg-indigo-500', 'text-white');
+                tabBtns[0].classList.remove('text-gray-600');
+            } else if (section === 'mycomments' && tabBtns[1]) {
+                tabBtns[1].classList.add('bg-indigo-500', 'text-white');
+                tabBtns[1].classList.remove('text-gray-600');
+            } else if (section === 'myaccount' && tabBtns[2]) {
+                tabBtns[2].classList.add('bg-indigo-500', 'text-white');
+                tabBtns[2].classList.remove('text-gray-600');
+            }
+        }
+
+        // Authentication
+        function showForm(type) {
+            currentForm = type;
+            const isRegister = type === "register";
+
+            document.getElementById("formTitle").textContent = isRegister ? "Register" : "Login";
+            document.getElementById("submitText").textContent = isRegister ? "Register" : "Login";
+            document.getElementById("emailField").classList.toggle("hidden", !isRegister);
+            document.getElementById("authModal").classList.remove("hidden");
+
+            document.getElementById("usernameInput").value = "";
+            document.getElementById("passwordInput").value = "";
+            document.getElementById("emailInput").value = "";
+        }
+
+        function closeModal() {
+            document.getElementById("authModal").classList.add("hidden");
+        }
+
+        function submitAuth() {
+            const username = document.getElementById("usernameInput").value.trim();
+            const password = document.getElementById("passwordInput").value.trim();
+            const email = document.getElementById("emailInput").value.trim();
+
+            if (username === "" || password === "") {
+                showNotification("Please fill in all required fields", "error");
+                return;
+            }
+
+            if (currentForm === "register" && email === "") {
+                showNotification("Please enter your email address", "error");
+                return;
+            }
+
+            if (username.length < 3) {
+                showNotification("Username must be at least 3 characters long", "error");
+                return;
+            }
+
+            if (password.length < 6) {
+                showNotification("Password must be at least 6 characters long", "error");
+                return;
+            }
+
+            loggedInUser = {
+                username: username,
+                email: email || "user@example.com",
+                joinDate: new Date().toLocaleDateString(),
+                fullName: "",
+                age: "",
+                phone: "",
+                bio: "Hello! I'm new to this platform."
+            };
+
+            updateUIAfterLogin();
+            closeModal();
+            saveToStorage();
+
+            const message = currentForm === "login" ? "Successfully logged in!" : "Account created and logged in!";
+            showNotification(message, "success");
+        }
+
+        function updateUIAfterLogin() {
+            const userAvatar = loggedInUser.username.charAt(0).toUpperCase();
+
+            document.getElementById("userAvatar").textContent = userAvatar;
+            document.getElementById("userName").textContent = loggedInUser.username;
+            document.getElementById("profileAvatar").textContent = userAvatar;
+            document.getElementById("profileName").textContent = loggedInUser.username;
+            document.getElementById("totalComments").textContent = myComments.length;
+
+            document.getElementById("userInfo").classList.remove("hidden");
+            document.getElementById("userInfo").classList.add("flex");
+            document.getElementById("authButtons").classList.add("hidden");
+        }
+
+        function showUserProfile() {
+            document.getElementById("userModal").classList.remove("hidden");
+            document.getElementById("totalComments").textContent = myComments.length;
+        }
+
+        function closeUserModal() {
+            document.getElementById("userModal").classList.add("hidden");
+        }
+
+        function logout() {
+            loggedInUser = null;
+            myComments = [];
+
+            localStorage.removeItem('commentSystemUser');
+            localStorage.removeItem('commentSystemMyComments');
+
+            document.getElementById("userInfo").classList.add("hidden");
+            document.getElementById("userInfo").classList.remove("flex");
+            document.getElementById("authButtons").classList.remove("hidden");
+
+            renderMyComments();
+            closeUserModal();
+            showNotification("Successfully logged out", "info");
+        }
+
+        // Comment functions
+        function postComment() {
+            if (!loggedInUser) {
+                showNotification("Please login to post a comment", "error");
+                showForm('login');
+                return;
+            }
+
+            const text = document.getElementById("commentInput").value.trim();
+            if (text === "") {
+                showNotification("Please write something before posting", "error");
+                return;
+            }
+
+            const newComment = {
+                id: Date.now(),
+                username: loggedInUser.username,
+                text: text,
+                timestamp: new Date(),
+                likes: 0,
+                isMyComment: true
+            };
+
+            comments.unshift(newComment);
+            myComments.unshift({ ...newComment });
+
+            document.getElementById("commentInput").value = "";
+            updateCharCount();
+            renderComments();
+            renderMyComments();
+            saveToStorage();
+
+            showNotification("Comment posted successfully!", "success");
+        }
+
+        function renderComments() {
+            const container = document.getElementById("commentsList");
+
+            if (comments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-comment-slash text-4xl text-gray-300 mb-4"></i>
+                        <p>No comments yet. Be the first to comment!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = comments.map(comment => `
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow comment-card">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                            ${comment.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <h4 class="font-semibold text-indigo-600">${comment.username}</h4>
+                                <span class="text-gray-400 text-sm">${formatTime(comment.timestamp)}</span>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed">${comment.text}</p>
+                            <div class="flex items-center space-x-4 mt-3">
+                                <button onclick="likeComment(${comment.id})"
+                                        class="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors">
+                                    <i class="fas fa-heart"></i>
+                                    <span>${comment.likes}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderMyComments() {
+            const container = document.getElementById("myCommentsList");
+
+            if (myComments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-edit text-4xl text-gray-300 mb-4"></i>
+                        <p>You haven't posted any comments yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = myComments.map(comment => `
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 hover:shadow-md transition-shadow comment-card">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                            ${comment.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center space-x-2">
+                                    <h4 class="font-semibold text-emerald-600">${comment.username}</h4>
+                                    <span class="text-gray-400 text-sm">${formatTime(comment.timestamp)}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="editComment(${comment.id})"
+                                            class="text-blue-500 hover:text-blue-600 transition-colors p-1" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deleteComment(${comment.id})"
+                                            class="text-red-500 hover:text-red-600 transition-colors p-1" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed">${comment.text}</p>
+                            <div class="flex items-center space-x-4 mt-3">
+                                <span class="flex items-center space-x-1 text-gray-500">
+                                    <i class="fas fa-heart text-red-400"></i>
+                                    <span>${comment.likes} likes</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function likeComment(commentId) {
+            const comment = comments.find(c => c.id === commentId);
+            if (comment) {
+                comment.likes += 1;
+                renderComments();
+                saveToStorage();
+            }
+        }
+
+        function editComment(commentId) {
+            const comment = myComments.find(c => c.id === commentId);
+            if (comment) {
+                editingCommentId = commentId;
+                document.getElementById("editCommentInput").value = comment.text;
+                document.getElementById("editModal").classList.remove("hidden");
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById("editModal").classList.add("hidden");
+            editingCommentId = null;
+        }
+
+        function saveEdit() {
+            const newText = document.getElementById("editCommentInput").value.trim();
+
+            if (newText === "") {
+                showNotification("Comment cannot be empty", "error");
+                return;
+            }
+
+            const myCommentIndex = myComments.findIndex(c => c.id === editingCommentId);
+            if (myCommentIndex !== -1) {
+                myComments[myCommentIndex].text = newText;
+            }
+
+            const commentIndex = comments.findIndex(c => c.id === editingCommentId);
+            if (commentIndex !== -1) {
+                comments[commentIndex].text = newText;
+            }
+
+            renderComments();
+            renderMyComments();
+            closeEditModal();
+            saveToStorage();
+            showNotification("Comment updated successfully!", "success");
+        }
+
+        function deleteComment(commentId) {
+            if (!confirm("Are you sure you want to delete this comment?")) {
+                return;
+            }
+
+            myComments = myComments.filter(c => c.id !== commentId);
+            comments = comments.filter(c => c.id !== commentId);
+
+            renderComments();
+            renderMyComments();
+            saveToStorage();
+            showNotification("Comment deleted successfully!", "success");
+        }
+
+        // Utility functions
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+
+            if (diffInMinutes < 1) return "Just now";
+            if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+            if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+            return date.toLocaleDateString();
+        }
+
+        function showNotification(message, type = "info") {
+            const notification = document.createElement("div");
+            const bgColor = type === "success" ? "bg-green-500" :
+                           type === "error" ? "bg-red-500" :
+                           type === "info" ? "bg-blue-500" : "bg-gray-500";
+
+            notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300`;
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-${type === "success" ? "check-circle" : type === "error" ? "exclamation-circle" : "info-circle"}"></i>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.remove("translate-x-full");
+            }, 100);
+
+            setTimeout(() => {
+                notification.classList.add("translate-x-full");
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 5000);
+        }
+
+        // Initialize demo comments
+        function initDemoComments() {
+            if (comments.length === 0) {
+                const demoComments = [
+                    {
+                        id: 1001,
+                        username: "John_Doe",
+                        text: "This is an amazing comment system! I love how clean and responsive it is.",
+                        timestamp: new Date(Date.now() - 3600000),
+                        likes: 5,
+                        isMyComment: false
+                    },
+                    {
+                        id: 1002,
+                        username: "Sarah_Wilson",
+                        text: "Great work on the user interface. The mobile responsiveness is excellent!",
+                        timestamp: new Date(Date.now() - 7200000),
+                        likes: 3,
+                        isMyComment: false
+                    },
+                    {
+                        id: 1003,
+                        username: "Mike_Johnson",
+                        text: "I've been looking for a comment system like this. Thank you for sharing!",
+                        timestamp: new Date(Date.now() - 10800000),
+                        likes: 8,
+                        isMyComment: false
+                    }
+                ];
+
+                comments = demoComments;
+                renderComments();
+                saveToStorage();
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                const commentInput = document.getElementById('commentInput');
+                if (document.activeElement === commentInput) {
+                    postComment();
+                }
+            }
+
+            if (e.key === 'Escape') {
+                closeModal();
+                closeUserModal();
+                closeEditModal();
+                closeFieldEditModal();
+                closeUserInfoModal();
+            }
+        });
+
+        // Account management functions
+        function updateAccountSection() {
+            if (loggedInUser) {
+                document.getElementById('accountNotLoggedIn').style.display = 'none';
+                document.getElementById('accountLoggedIn').classList.remove('hidden');
+
+                const avatar = loggedInUser.username.charAt(0).toUpperCase();
+                document.getElementById('accountAvatar').textContent = avatar;
+                document.getElementById('accountUsername').textContent = loggedInUser.username;
+                document.getElementById('accountBio').textContent = loggedInUser.bio || "No bio yet. Click edit to add one!";
+                document.getElementById('accountJoinDate').textContent = loggedInUser.joinDate;
+                document.getElementById('accountTotalComments').textContent = myComments.length;
+
+                // Update display fields
+                document.getElementById('displayFullName').textContent = loggedInUser.fullName || "Not set";
+                document.getElementById('displayUsername').textContent = loggedInUser.username;
+                document.getElementById('displayAge').textContent = loggedInUser.age || "Not set";
+                document.getElementById('displayEmail').textContent = loggedInUser.email;
+                document.getElementById('displayPhone').textContent = loggedInUser.phone || "Not set";
+                document.getElementById('displayBio').textContent = loggedInUser.bio || "Tell us about yourself...";
+            } else {
+                document.getElementById('accountNotLoggedIn').style.display = 'block';
+                document.getElementById('accountLoggedIn').classList.add('hidden');
+            }
+        }
+
+        function editField(fieldName) {
+            currentEditField = fieldName;
+            const modal = document.getElementById('editFieldModal');
+            const input = document.getElementById('editFieldInput');
+            const textarea = document.getElementById('editFieldTextarea');
+            const title = document.getElementById('editFieldTitle');
+
+            // Reset inputs
+            input.classList.add('hidden');
+            textarea.classList.add('hidden');
+
+            let currentValue = '';
+
+            switch(fieldName) {
+                case 'fullName':
+                    title.textContent = 'Edit Full Name';
+                    currentValue = loggedInUser.fullName || '';
+                    input.value = currentValue;
+                    input.type = 'text';
+                    input.placeholder = 'Enter your full name';
+                    input.classList.remove('hidden');
+                    break;
+                case 'username':
+                    title.textContent = 'Edit Username';
+                    currentValue = loggedInUser.username || '';
+                    input.value = currentValue;
+                    input.type = 'text';
+                    input.placeholder = 'Enter username';
+                    input.classList.remove('hidden');
+                    break;
+                case 'age':
+                    title.textContent = 'Edit Age';
+                    currentValue = loggedInUser.age || '';
+                    input.value = currentValue;
+                    input.type = 'number';
+                    input.placeholder = 'Enter your age';
+                    input.classList.remove('hidden');
+                    break;
+                case 'email':
+                    title.textContent = 'Edit Email';
+                    currentValue = loggedInUser.email || '';
+                    input.value = currentValue;
+                    input.type = 'email';
+                    input.placeholder = 'Enter your email';
+                    input.classList.remove('hidden');
+                    break;
+                case 'phone':
+                    title.textContent = 'Edit Phone Number';
+                    currentValue = loggedInUser.phone || '';
+                    input.value = currentValue;
+                    input.type = 'tel';
+                    input.placeholder = 'Enter your phone number';
+                    input.classList.remove('hidden');
+                    break;
+                case 'bio':
+                    title.textContent = 'Edit Bio';
+                    currentValue = loggedInUser.bio || '';
+                    textarea.value = currentValue;
+                    textarea.placeholder = 'Tell us about yourself...';
+                    textarea.classList.remove('hidden');
+                    break;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeFieldEditModal() {
+            document.getElementById('editFieldModal').classList.add('hidden');
+            currentEditField = null;
+        }
+
+        function saveFieldEdit() {
+            const input = document.getElementById('editFieldInput');
+            const textarea = document.getElementById('editFieldTextarea');
+            let newValue = '';
+
+            if (!input.classList.contains('hidden')) {
+                newValue = input.value.trim();
+            } else if (!textarea.classList.contains('hidden')) {
+                newValue = textarea.value.trim();
+            }
+
+            if (currentEditField === 'username' && newValue.length < 3) {
+                showNotification('Username must be at least 3 characters long', 'error');
+                return;
+            }
+
+            if (currentEditField === 'email' && newValue && !isValidEmail(newValue)) {
+                showNotification('Please enter a valid email address', 'error');
+                return;
+            }
+
+            // Update user data
+            loggedInUser[currentEditField] = newValue;
+
+            // Update UI
+            updateAccountSection();
+            updateUIAfterLogin();
+            saveToStorage();
+            closeFieldEditModal();
+
+            showNotification(`${currentEditField.charAt(0).toUpperCase() + currentEditField.slice(1)} updated successfully!`, 'success');
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function showUserInfo(username) {
+            // Find user info (for now, show basic info)
+            const userComments = comments.filter(c => c.username === username);
+            const avatar = username.charAt(0).toUpperCase();
+
+            document.getElementById('userInfoAvatar').textContent = avatar;
+            document.getElementById('userInfoName').textContent = username;
+
+            // If it's current user, show their bio
+            if (loggedInUser && loggedInUser.username === username) {
+                document.getElementById('userInfoBio').textContent = loggedInUser.bio || "No bio available";
+                document.getElementById('userInfoJoinDate').textContent = loggedInUser.joinDate;
+            } else {
+                document.getElementById('userInfoBio').textContent = "This user hasn't shared their bio yet.";
+                document.getElementById('userInfoJoinDate').textContent = "Unknown";
+            }
+
+            document.getElementById('userInfoTotalComments').textContent = userComments.length;
+            document.getElementById('userInfoModal').classList.remove('hidden');
+        }
+
+        function closeUserInfoModal() {
+            document.getElementById('userInfoModal').classList.add('hidden');
+        }
+
+        function changePassword() {
+            showNotification('Password change feature coming soon!', 'info');
+        }
+
+        function exportData() {
+            const userData = {
+                profile: loggedInUser,
+                comments: myComments,
+                exportDate: new Date().toISOString()
+            };
+
+            const dataStr = JSON.stringify(userData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${loggedInUser.username}_data.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showNotification('Data exported successfully!', 'success');
+        }
+
+        function deleteAccount() {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                if (confirm('This will permanently delete all your data. Are you absolutely sure?')) {
+                    // Remove all user data
+                    localStorage.removeItem('commentSystemUser');
+                    localStorage.removeItem('commentSystemMyComments');
+
+                    // Remove user comments from global comments
+                    comments = comments.filter(c => c.username !== loggedInUser.username);
+                    localStorage.setItem('commentSystemComments', JSON.stringify(comments));
+
+                    // Reset user state
+                    loggedInUser = null;
+                    myComments = [];
+
+                    // Update UI
+                    document.getElementById("userInfo").classList.add("hidden");
+                    document.getElementById("userInfo").classList.remove("flex");
+                    document.getElementById("authButtons").classList.remove("hidden");
+
+                    renderComments();
+                    renderMyComments();
+                    showSection('comments');
+
+                    showNotification('Account deleted successfully', 'success');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
