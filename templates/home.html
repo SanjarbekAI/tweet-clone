@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Tweet System{% endblock %}
+
+{% block content %}
+    <div class="max-w-4xl mx-auto">
+        <!-- Tweet Compose Section (Only show if user is authenticated) -->
+        {% if user.is_authenticated %}
+            <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+                <div class="flex items-start space-x-4">
+                    <div class="w-12 h-12 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold">
+                        {{ user.username|first|upper }}
+                    </div>
+                    <div class="flex-1">
+                        <form method="POST" action="/create-tweet/">
+                            {% csrf_token %}
+                            <textarea name="content" rows="4"
+                                      class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                                      placeholder="What's happening?" maxlength="280" required></textarea>
+                            <div class="flex justify-between items-center mt-4">
+                                <span class="text-sm text-gray-500">0/280 characters</span>
+                                <button type="submit"
+                                        class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-full font-semibold transition-colors">
+                                    <i class="fas fa-paper-plane mr-2"></i>Tweet
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Tweets Feed -->
+        <div class="space-y-6">
+            <!-- Sample Tweet Structure - Replace with Django loop -->
+            {% for tweet in tweets %}
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden tweet-card">
+                    <!-- Tweet Header -->
+                    <div class="p-6 pb-4">
+                        <div class="flex items-start space-x-4">
+                            <a href="/user/{{ tweet.user.username }}/"
+                               class="w-12 h-12 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold">
+                                {{ tweet.user.username|first|upper }}
+                            </a>
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <a href="/user/{{ tweet.user.username }}/"
+                                       class="font-bold text-gray-900 hover:text-indigo-600">
+                                        {{ tweet.user.username }}
+                                    </a>
+                                    <span class="text-gray-500">•</span>
+                                    <span class="text-gray-500 text-sm">{{ tweet.created_at|timesince }} ago</span>
+                                    {% if tweet.user == user %}
+                                        <div class="ml-auto flex space-x-2">
+                                            <a href="/edit-tweet/{{ tweet.id }}/"
+                                               class="text-blue-500 hover:text-blue-600">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="POST" action="/delete-tweet/{{ tweet.id }}/" class="inline"
+                                                  onsubmit="return confirm('Are you sure you want to delete this tweet?')">
+                                                {% csrf_token %}
+                                                <button type="submit" class="text-red-500 hover:text-red-600">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="mt-3">
+                                    <p class="text-gray-800 leading-relaxed">{{ tweet.content }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tweet Actions -->
+                    <div class="px-6 py-4 border-t border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-6">
+                                <!-- Like Button -->
+                                <form method="POST" action="/like-tweet/{{ tweet.id }}/" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="flex items-center space-x-2 text-gray-500 hover:text-red-500 transition-colors like-btn {% if tweet.user_has_liked %}liked{% endif %}">
+                                        <i class="fas fa-heart"></i>
+                                        <span>{{ tweet.likes_count }}</span>
+                                    </button>
+                                </form>
+
+                                <!-- Comment Button -->
+                                <button onclick="toggleComments('tweet-{{ tweet.id }}')"
+                                        class="flex items-center space-x-2 text-gray-500 hover:text-indigo-500 transition-colors">
+                                    <i class="fas fa-comment"></i>
+                                    <span>{{ tweet.comments_count }}</span>
+                                </button>
+                            </div>
+
+                            <span class="text-sm text-gray-400">{{ tweet.created_at|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div id="tweet-{{ tweet.id }}-comments" class="hidden border-t border-gray-100">
+                        <!-- Comment Form (Only show if user is authenticated) -->
+                        {% if user.is_authenticated %}
+                            <div class="p-6 border-b border-gray-100 bg-gray-50">
+                                <form method="POST" action="/add-comment/{{ tweet.id }}/">
+                                    {% csrf_token %}
+                                    <div class="flex items-start space-x-4">
+                                        <div class="w-10 h-10 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                                            {{ user.username|first|upper }}
+                                        </div>
+                                        <div class="flex-1">
+                                <textarea name="content" rows="3"
+                                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                                          placeholder="Write a comment..." maxlength="280" required></textarea>
+                                            <div class="flex justify-end mt-3">
+                                                <button type="submit"
+                                                        class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                                    <i class="fas fa-reply mr-1"></i>Reply
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        {% endif %}
+
+                        <!-- Comments List -->
+                        <div class="max-h-96 overflow-y-auto">
+                            {% for comment in tweet.comments.all %}
+                                <div class="p-6 border-b border-gray-100 last:border-b-0">
+                                    <div class="flex items-start space-x-4">
+                                        <a href="/user/{{ comment.user.username }}/"
+                                           class="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                                            {{ comment.user.username|first|upper }}
+                                        </a>
+                                        <div class="flex-1">
+                                            <div class="flex items-center space-x-2 mb-2">
+                                                <a href="/user/{{ comment.user.username }}/"
+                                                   class="font-semibold text-gray-900 hover:text-indigo-600">
+                                                    {{ comment.user.username }}
+                                                </a>
+                                                <span class="text-gray-400 text-sm">{{ comment.created_at|timesince }} ago</span>
+                                                {% if comment.user == user %}
+                                                    <div class="ml-auto flex space-x-2">
+                                                        <a href="/edit-comment/{{ comment.id }}/"
+                                                           class="text-blue-500 hover:text-blue-600 text-sm">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <form method="POST" action="/delete-comment/{{ comment.id }}/"
+                                                              class="inline"
+                                                              onsubmit="return confirm('Are you sure you want to delete this comment?')">
+                                                            {% csrf_token %}
+                                                            <button type="submit"
+                                                                    class="text-red-500 hover:text-red-600 text-sm">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <p class="text-gray-700 leading-relaxed">{{ comment.content }}</p>
+
+                                            <!-- Comment Like Button -->
+                                            {% if user.is_authenticated %}
+                                                <div class="mt-3">
+                                                    <form method="POST" action="/like-comment/{{ comment.id }}/"
+                                                          class="inline">
+                                                        {% csrf_token %}
+                                                        <button type="submit"
+                                                                class="flex items-center space-x-1 text-gray-400 hover:text-red-500 transition-colors">
+                                                            <i class="fas fa-heart text-xs"></i>
+                                                            <span class="text-sm">{{ comment.likes_count }}</span>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="p-6 text-center text-gray-500">
+                                    <i class="fas fa-comment-slash text-3xl mb-2"></i>
+                                    <p>No comments yet. Be the first to comment!</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="bg-white rounded-2xl shadow-lg p-12 text-center">
+                    <i class="fas fa-twitter text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No tweets yet</h3>
+                    <p class="text-gray-500">Be the first to share something!</p>
+                    {% if not user.is_authenticated %}
+                        <div class="mt-6">
+                            <a href="/login/"
+                               class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                                Login to Tweet
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        function toggleComments(tweetId) {
+            const commentsSection = document.getElementById(tweetId + '-comments');
+            if (commentsSection.classList.contains('hidden')) {
+                commentsSection.classList.remove('hidden');
+            } else {
+                commentsSection.classList.add('hidden');
+            }
+        }
+
+        // Character counter for tweet compose
+        document.addEventListener('DOMContentLoaded', function () {
+            const textareas = document.querySelectorAll('textarea[name="content"]');
+            textareas.forEach(textarea => {
+                const counter = textarea.parentElement.querySelector('.text-gray-500');
+                if (counter) {
+                    textarea.addEventListener('input', function () {
+                        const count = this.value.length;
+                        const maxLength = this.getAttribute('maxlength') || 280;
+                        counter.textContent = count + '/' + maxLength + ' characters';
+
+                        if (count > maxLength * 0.9) {
+                            counter.classList.add('text-red-500');
+                        } else {
+                            counter.classList.remove('text-red-500');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+{% endblock %}

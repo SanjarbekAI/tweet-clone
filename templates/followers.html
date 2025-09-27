@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.username }}'s Followers - Tweet System{% endblock %}
+
+{% block content %}
+    <div class="max-w-4xl mx-auto">
+        <!-- Back Navigation -->
+        <div class="mb-6">
+            <a href="/user/{{ profile_user.username }}/"
+               class="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to @{{ profile_user.username }}'s profile
+            </a>
+        </div>
+
+        <!-- Page Header -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-xl">
+                        {{ profile_user.username|first|upper }}
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Followers</h1>
+                        <p class="text-gray-600">People following @{{ profile_user.username }}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-2xl font-bold text-indigo-600">{{ followers_count }}</p>
+                    <p class="text-gray-500 text-sm">Followers</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white rounded-2xl shadow-lg mb-8">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6">
+                    <a href="/user/{{ profile_user.username }}/followers/"
+                       class="py-4 px-1 border-b-2 border-indigo-500 font-medium text-sm text-indigo-600">
+                        <i class="fas fa-users mr-2"></i>{{ followers_count }} Followers
+                    </a>
+                    <a href="/user/{{ profile_user.username }}/following/"
+                       class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors">
+                        <i class="fas fa-user-plus mr-2"></i>{{ following_count }} Following
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                <div class="flex items-center space-x-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Search Followers</h3>
+                </div>
+                <div class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3">
+                    <input type="text"
+                           id="search-followers"
+                           placeholder="Search followers..."
+                           class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    <select id="sort-followers"
+                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <option value="newest">Recent Followers</option>
+                        <option value="oldest">Earliest Followers</option>
+                        <option value="alphabetical">A-Z</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Followers List -->
+        <div class="space-y-4" id="followers-container">
+            {% for follow in followers %}
+                <div class="bg-white rounded-2xl shadow-lg p-6 follower-item" data-follow-id="{{ follow.id }}">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <!-- Profile Picture -->
+                            <a href="/user/{{ follow.follower.username }}/"
+                               class="w-12 h-12 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold hover:scale-105 transition-transform">
+                                {{ follow.follower.username|first|upper }}
+                            </a>
+
+                            <!-- User Info -->
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <a href="/user/{{ follow.follower.username }}/"
+                                       class="font-semibold text-gray-900 hover:text-indigo-600 transition-colors">
+                                        {% if follow.follower.first_name or follow.follower.last_name %}
+                                            {{ follow.follower.first_name }} {{ follow.follower.last_name }}
+                                        {% else %}
+                                            {{ follow.follower.username }}
+                                        {% endif %}
+                                    </a>
+                                    {% if follow.follower.profile.is_verified %}
+                                        <i class="fas fa-check-circle text-blue-500"></i>
+                                    {% endif %}
+                                </div>
+                                <a href="/user/{{ follow.follower.username }}/"
+                                   class="text-gray-500 hover:text-indigo-600 transition-colors">
+                                    @{{ follow.follower.username }}
+                                </a>
+                                {% if follow.follower.profile.bio %}
+                                    <p class="text-gray-600 text-sm mt-1">{{ follow.follower.profile.bio|truncatechars:60 }}</p>
+                                {% endif %}
+                                <div class="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                                    <span>{{ follow.follower.tweets.count }} tweets</span>
+                                    <span>{{ follow.follower.followers.count }} followers</span>
+                                    <span>Following since {{ follow.created_at|date:"M Y" }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center space-x-3">
+                            {% if user.is_authenticated and user != follow.follower %}
+                                {% if user in follow.follower.followers.all %}
+                                    <!-- Unfollow Button -->
+                                    <form method="POST" action="/unfollow/{{ follow.follower.id }}/" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="bg-gray-200 hover:bg-red-500 hover:text-white text-gray-700 px-4 py-2 rounded-lg font-medium transition-all duration-300 group">
+                                            <span class="group-hover:hidden">Following</span>
+                                            <span class="hidden group-hover:inline">
+                                                <i class="fas fa-user-minus mr-1"></i>Unfollow
+                                            </span>
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <!-- Follow Button -->
+                                    <form method="POST" action="/follow/{{ follow.follower.id }}/" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                            <i class="fas fa-user-plus mr-1"></i>Follow
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+
+                            {% if profile_user == user %}
+                                <!-- Remove Follower (only for own profile) -->
+                                <form method="POST" action="/remove-follower/{{ follow.follower.id }}/" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            onclick="return confirm('Remove {{ follow.follower.username }} as a follower?')"
+                                            class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all"
+                                            title="Remove follower">
+                                        <i class="fas fa-user-times"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="bg-white rounded-2xl shadow-lg p-12 text-center">
+                    <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No followers yet</h3>
+                    {% if profile_user == user %}
+                        <p class="text-gray-500 mb-6">Start creating great content to attract followers!</p>
+                        <a href="/home/"
+                           class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                            <i class="fas fa-home mr-2"></i>Go to Home Feed
+                        </a>
+                    {% else %}
+                        <p class="text-gray-500">@{{ profile_user.username }} doesn't have any followers yet.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Load More -->
+        {% if has_more_followers %}
+            <div class="mt-8 text-center">
+                <button onclick="loadMoreFollowers()"
+                        class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-chevron-down mr-2"></i>Load More Followers
+                </button>
+            </div>
+        {% endif %}
+
+        <!-- Mutual Followers (if viewing someone else's profile) -->
+        {% if profile_user != user and mutual_followers %}
+            <div class="bg-white rounded-2xl shadow-lg p-6 mt-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-users mr-2"></i>Mutual Followers
+                </h3>
+                <div class="flex -space-x-2">
+                    {% for mutual in mutual_followers|slice:":10" %}
+                        <a href="/user/{{ mutual.username }}/"
+                           class="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm border-2 border-white hover:scale-110 transition-transform"
+                           title="{{ mutual.username }}">
+                            {{ mutual.username|first|upper }}
+                        </a>
+                    {% endfor %}
+                    {% if mutual_followers.count > 10 %}
+                        <div class="w-10 h-10 bg-gray-400 text-white rounded-full flex items-center justify-center font-bold text-xs border-2 border-white">
+                            +{{ mutual_followers.count|add:"-10" }}
+                        </div>
+                    {% endif %}
+                </div>
+                <p class="text-gray-600 text-sm mt-2">
+                    {{ mutual_followers.count }} mutual follower{{ mutual_followers.count|pluralize }}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Search functionality
+        document.getElementById('search-followers').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const followers = document.querySelectorAll('.follower-item');
+
+            followers.forEach(follower => {
+                const username = follower.querySelector('a[href*="/user/"]').textContent.toLowerCase();
+                const bio = follower.querySelector('p');
+                const bioText = bio ? bio.textContent.toLowerCase() : '';
+
+                if (username.includes(searchTerm) || bioText.includes(searchTerm)) {
+                    follower.style.display = 'block';
+                } else {
+                    follower.style.display = 'none';
+                }
+            });
+        });
+
+        // Sort functionality
+        document.getElementById('sort-followers').addEventListener('change', function () {
+            const sortBy = this.value;
+            const container = document.getElementById('followers-container');
+            const followers = Array.from(container.querySelectorAll('.follower-item'));
+
+            followers.sort((a, b) => {
+                switch (sortBy) {
+                    case 'newest':
+                        return new Date(b.dataset.followedAt) - new Date(a.dataset.followedAt);
+                    case 'oldest':
+                        return new Date(a.dataset.followedAt) - new Date(b.dataset.followedAt);
+                    case 'alphabetical':
+                        const aName = a.querySelector('a[href*="/user/"]').textContent;
+                        const bName = b.querySelector('a[href*="/user/"]').textContent;
+                        return aName.localeCompare(bName);
+                    default:
+                        return 0;
+                }
+            });
+
+            followers.forEach(follower => container.appendChild(follower));
+        });
+
+        function loadMoreFollowers() {
+            // Implementation for loading more followers via AJAX
+            console.log('Loading more followers...');
+        }
+
+        // Handle follow/unfollow button feedback
+        document.addEventListener('DOMContentLoaded', function () {
+            const forms = document.querySelectorAll('form[action*="/follow/"], form[action*="/unfollow/"]');
+
+            forms.forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    const button = this.querySelector('button');
+                    button.disabled = true;
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Loading...';
+                });
+            });
+        });
+    </script>
+{% endblock %}

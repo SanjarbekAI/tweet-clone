@@ -1,0 +1,555 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - Tweet System{% endblock %}
+
+{% block content %}
+    <div class="max-w-4xl mx-auto">
+        <!-- Page Header -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="flex items-center space-x-4">
+                <div class="w-16 h-16 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-xl">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Settings</h1>
+                    <p class="text-gray-600">Manage your account preferences and privacy settings</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Settings Navigation -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <nav class="space-y-1">
+                        <a href="#account" onclick="showSection('account')"
+                           class="settings-nav-item active flex items-center px-6 py-4 text-indigo-600 bg-indigo-50 font-medium">
+                            <i class="fas fa-user mr-3"></i>Account
+                        </a>
+                        <a href="#privacy" onclick="showSection('privacy')"
+                           class="settings-nav-item flex items-center px-6 py-4 text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
+                            <i class="fas fa-shield-alt mr-3"></i>Privacy & Safety
+                        </a>
+                        <a href="#notifications" onclick="showSection('notifications')"
+                           class="settings-nav-item flex items-center px-6 py-4 text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
+                            <i class="fas fa-bell mr-3"></i>Notifications
+                        </a>
+                        <a href="#display" onclick="showSection('display')"
+                           class="settings-nav-item flex items-center px-6 py-4 text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
+                            <i class="fas fa-palette mr-3"></i>Display
+                        </a>
+                        <a href="#data" onclick="showSection('data')"
+                           class="settings-nav-item flex items-center px-6 py-4 text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
+                            <i class="fas fa-download mr-3"></i>Data & Export
+                        </a>
+                        <a href="#security" onclick="showSection('security')"
+                           class="settings-nav-item flex items-center px-6 py-4 text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
+                            <i class="fas fa-lock mr-3"></i>Security
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Settings Content -->
+            <div class="lg:col-span-2">
+                <!-- Account Settings -->
+                <div id="account-section" class="settings-section">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-xl font-semibold text-gray-900">Account Information</h2>
+                        </div>
+                        <form method="POST" action="/update-account/" class="p-6 space-y-6">
+                            {% csrf_token %}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                                    <input type="text" name="username" value="{{ user.username }}"
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                    <input type="email" name="email" value="{{ user.email }}"
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                </div>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Change Password -->
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-xl font-semibold text-gray-900">Change Password</h2>
+                        </div>
+                        <form method="POST" action="/change-password/" class="p-6 space-y-6">
+                            {% csrf_token %}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                                <input type="password" name="current_password" required
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                                <input type="password" name="new_password" required
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                                <input type="password" name="confirm_password" required
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                    Update Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Privacy Settings -->
+                <div id="privacy-section" class="settings-section hidden">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-xl font-semibold text-gray-900">Privacy & Safety</h2>
+                        </div>
+                        <form method="POST" action="/update-privacy/" class="p-6">
+                            {% csrf_token %}
+                            <div class="space-y-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-medium text-gray-900">Private Account</h3>
+                                        <p class="text-sm text-gray-500">Only approved followers can see your tweets</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="private_account" class="sr-only peer" {% if user.profile.is_private %}checked{% endif %}>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-medium text-gray-900">Allow Direct Messages</h3>
+                                        <p class="text-sm text-gray-500">Let anyone send you direct messages</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="allow_dm" class="sr-only peer" {% if user.profile.allow_dm %}checked{% endif %}>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-medium text-gray-900">Show Online Status</h3>
+                                        <p class="text-sm text-gray-500">Let others see when you're active</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="show_online" class="sr-only peer" {% if user.profile.show_online %}checked{% endif %}>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-medium text-gray-900">Discoverable by Email</h3>
+                                        <p class="text-sm text-gray-500">Let people find you by your email address</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="discoverable_email" class="sr-only peer" {% if user.profile.discoverable_email %}checked{% endif %}>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    </label>
+                                </div>
+
+                                <div>
+                                    <h3 class="font-medium text-gray-900 mb-2">Blocked Users</h3>
+                                    <p class="text-sm text-gray-500 mb-4">Manage users you've blocked</p>
+                                    <a href="/blocked-users/" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                                        Manage blocked users
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="flex justify-end mt-6">
+                                <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                    Save Privacy Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Notifications Settings -->
+                <div id="notifications-section" class="settings-section hidden">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-xl font-semibold text-gray-900">Notification Preferences</h2>
+                        </div>
+                        <form method="POST" action="/update-notifications/" class="p-6">
+                            {% csrf_token %}
+                            <div class="space-y-6">
+                                <div>
+                                    <h3 class="font-medium text-gray-900 mb-4">Email Notifications</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="text-gray-900">New likes on your tweets</p>
+                                                <p class="text-sm text-gray-500">Get notified when someone likes your tweet</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" name="notify_likes" class="sr-only peer" checked>
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                            </label>
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="text-gray-900">New comments on your tweets</p>
+                                                <p class="text-sm text-gray-500">Get notified when someone comments on your tweet</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" name="notify_comments" class="sr-only peer" checked>
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                            </label>
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="text-gray-900">New followers</p>
+                                                <p class="text-sm text-gray-500">Get notified when someone follows you</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" name="notify_followers" class="sr-only peer" checked>
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                            </label>
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="text-gray-900">Direct messages</p>
+                                                <p class="text-sm text-gray-500">Get notified when you receive a direct message</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" name="notify_dm" class="sr-only peer" checked>
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 class="font-medium text-gray-900 mb-4">Push Notifications</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="text-gray-900">Enable push notifications</p>
+                                                <p class="text-sm text-gray-500">Receive notifications on your device</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" name="push_enabled" class="sr-only peer">
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end mt-6">
+                                <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                    Save Notification Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Display Settings -->
+                <div id="display-section" class="settings-section hidden">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-xl font-semibold text-gray-900">Display Settings</h2>
+                        </div>
+                        <form method="POST" action="/update-display/" class="p-6">
+                            {% csrf_token %}
+                            <div class="space-y-6">
+                                <div>
+                                    <h3 class="font-medium text-gray-900 mb-4">Theme</h3>
+                                    <div class="grid grid-cols-3 gap-4">
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="theme" value="light" class="sr-only peer" checked>
+                                            <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-indigo-500 peer-checked:bg-indigo-50">
+                                                <div class="w-full h-20 bg-white border rounded mb-2"></div>
+                                                <p class="text-center text-sm font-medium">Light</p>
+                                            </div>
+                                        </label>
+
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="theme" value="dark" class="sr-only peer">
+                                            <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-indigo-500 peer-checked:bg-indigo-50">
+                                                <div class="w-full h-20 bg-gray-800 border rounded mb-2"></div>
+                                                <p class="text-center text-sm font-medium">Dark</p>
+                                            </div>
+                                        </label>
+
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="theme" value="auto" class="sr-only peer">
+                                            <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-indigo-500 peer-checked:bg-indigo-50">
+                                                <div class="w-full h-20 bg-gradient-to-r from-white to-gray-800 border rounded mb-2"></div>
+                                                <p class="text-center text-sm font-medium">Auto</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 class="font-medium text-gray-900 mb-4">Font Size</h3>
+                                    <div class="flex items-center space-x-4">
+                                        <label class="flex items-center">
+                                            <input type="radio" name="font_size" value="small" class="mr-2">
+                                            <span class="text-sm">Small</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="font_size" value="medium" class="mr-2" checked>
+                                            <span class="text-base">Medium</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="font_size" value="large" class="mr-2">
+                                            <span class="text-lg">Large</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-medium text-gray-900">Reduce motion</h3>
+                                        <p class="text-sm text-gray-500">Minimize animations and transitions</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="reduce_motion" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex justify-end mt-6">
+                                <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                    Save Display Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Data & Export Settings -->
+                <div id="data-section" class="settings-section hidden">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-xl font-semibold text-gray-900">Data Export</h2>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            <div>
+                                <h3 class="font-medium text-gray-900 mb-2">Download your data</h3>
+                                <p class="text-sm text-gray-500 mb-4">Get a copy of all your tweets, comments, and account information</p>
+                                <button onclick="requestDataExport()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-download mr-2"></i>Request Data Export
+                                </button>
+                            </div>
+
+                            <div class="border-t pt-6">
+                                <h3 class="font-medium text-gray-900 mb-2">Account Analytics</h3>
+                                <p class="text-sm text-gray-500 mb-4">View insights about your account activity</p>
+                                <a href="/analytics/" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium transition-colors inline-block">
+                                    <i class="fas fa-chart-bar mr-2"></i>View Analytics
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Storage Usage -->
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-xl font-semibold text-gray-900">Storage Usage</h2>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">Tweets</span>
+                                    <span class="text-gray-900 font-medium">{{ tweets_count }} tweets</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">Comments</span>
+                                    <span class="text-gray-900 font-medium">{{ comments_count }} comments</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">Likes given</span>
+                                    <span class="text-gray-900 font-medium">{{ likes_given }} likes</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">Account created</span>
+                                    <span class="text-gray-900 font-medium">{{ user.date_joined|date:"M d, Y" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Settings -->
+                <div id="security-section" class="settings-section hidden">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-xl font-semibold text-gray-900">Two-Factor Authentication</h2>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="font-medium text-gray-900">SMS Authentication</h3>
+                                    <p class="text-sm text-gray-500">Secure your account with SMS codes</p>
+                                </div>
+                                <button class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                    Enable
+                                </button>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-medium text-gray-900">Authenticator App</h3>
+                                    <p class="text-sm text-gray-500">Use an authenticator app for additional security</p>
+                                </div>
+                                <button class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                    Set Up
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Sessions -->
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-xl font-semibold text-gray-900">Active Sessions</h2>
+                        </div>
+                        <div class="divide-y divide-gray-200">
+                            <div class="p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-desktop text-gray-500"></i>
+                                            <span class="font-medium text-gray-900">Current Session</span>
+                                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">Active</span>
+                                        </div>
+                                        <p class="text-sm text-gray-500 mt-1">Chrome on Windows • Last active now</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-mobile-alt text-gray-500"></i>
+                                            <span class="font-medium text-gray-900">Mobile App</span>
+                                        </div>
+                                        <p class="text-sm text-gray-500 mt-1">iPhone • Last active 2 hours ago</p>
+                                    </div>
+                                    <button class="text-red-600 hover:text-red-800 text-sm font-medium">
+                                        Sign Out
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="px-6 py-4 bg-gray-50">
+                            <button class="text-red-600 hover:text-red-800 font-medium text-sm">
+                                Sign out of all other sessions
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden border-l-4 border-red-500">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-xl font-semibold text-red-700">Danger Zone</h2>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <h3 class="font-medium text-gray-900 mb-2">Deactivate Account</h3>
+                                    <p class="text-sm text-gray-500 mb-4">Temporarily deactivate your account. You can reactivate it anytime.</p>
+                                    <button onclick="deactivateAccount()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                        Deactivate Account
+                                    </button>
+                                </div>
+
+                                <div class="border-t pt-4">
+                                    <h3 class="font-medium text-gray-900 mb-2">Delete Account</h3>
+                                    <p class="text-sm text-gray-500 mb-4">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                                    <button onclick="deleteAccount()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                        Delete Account
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionName) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.settings-section');
+            sections.forEach(section => section.classList.add('hidden'));
+
+            // Show selected section
+            document.getElementById(sectionName + '-section').classList.remove('hidden');
+
+            // Update navigation
+            const navItems = document.querySelectorAll('.settings-nav-item');
+            navItems.forEach(item => {
+                item.classList.remove('active', 'text-indigo-600', 'bg-indigo-50');
+                item.classList.add('text-gray-600');
+            });
+
+            // Highlight active nav item
+            event.target.classList.add('active', 'text-indigo-600', 'bg-indigo-50');
+            event.target.classList.remove('text-gray-600');
+        }
+
+        function requestDataExport() {
+            if (confirm('This will create a downloadable archive of all your data. You will receive an email when it\'s ready. Continue?')) {
+                // Submit export request
+                fetch('/request-data-export/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Data export requested! You will receive an email when your download is ready.');
+                })
+                .catch(error => {
+                    alert('Error requesting data export. Please try again later.');
+                });
+            }
+        }
+
+        function deactivateAccount() {
+            if (confirm('Are you sure you want to deactivate your account? You can reactivate it by logging in again.')) {
+                window.location.href = '/deactivate-account/';
+            }
+        }
+
+        function deleteAccount() {
+            if (confirm('Are you absolutely sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.')) {
+                if (confirm('This is your final warning. All your tweets, comments, and account data will be permanently deleted. Are you sure?')) {
+                    const confirmation = prompt('Type "DELETE ACCOUNT" to confirm permanent deletion:');
+                    if (confirmation === 'DELETE ACCOUNT') {
+                        window.location.href = '/delete-account/';
+                    }
+                }
+            }
+        }
+    </script>
+{% endblock %}

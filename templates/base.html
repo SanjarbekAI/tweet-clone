@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tweet System{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        * {
+            transition: all 0.3s ease;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        body {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        header {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .bg-white {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        button:hover, .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active, .btn:active {
+            transform: translateY(0);
+        }
+
+        input:focus, textarea:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            border-color: #6366f1;
+        }
+
+        .tweet-card {
+            transform: translateY(10px);
+            opacity: 0;
+            animation: slideInUp 0.5s ease-out forwards;
+        }
+
+        @keyframes slideInUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .like-btn:hover {
+            color: #ef4444;
+        }
+
+        .liked {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+<!-- HEADER -->
+<header class="bg-white shadow-lg border-b-2 border-indigo-200 sticky top-0 z-40">
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <a href="/home/" class="text-2xl font-bold text-indigo-600">
+                    <i class="fab fa-twitter mr-2"></i>TweetSystem
+                </a>
+            </div>
+
+            <nav class="flex items-center space-x-6">
+                <!-- Navigation Links -->
+                <div class="hidden md:flex space-x-6">
+                    <a href="/home/"
+                       class="nav-link text-gray-600 hover:text-indigo-600 transition-colors duration-300 font-medium">
+                        <i class="fas fa-home mr-1"></i>Home
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="/my-tweets/"
+                           class="nav-link text-gray-600 hover:text-indigo-600 transition-colors duration-300 font-medium">
+                            <i class="fas fa-edit mr-1"></i>My Tweets
+                        </a>
+                        <a href="/profile/"
+                           class="nav-link text-gray-600 hover:text-indigo-600 transition-colors duration-300 font-medium">
+                            <i class="fas fa-user-cog mr-1"></i>Profile
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- User Info / Auth Buttons -->
+                <div class="flex items-center space-x-3">
+                    {% if user.is_authenticated %}
+                        <div class="flex items-center space-x-3 bg-indigo-50 px-4 py-2 rounded-full">
+                            <div class="w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                                <span>{{ user.username|first|upper }}</span>
+                            </div>
+                            <span class="font-semibold text-indigo-700">{{ user.username }}</span>
+                            <a href="/logout/" class="text-red-600 hover:text-red-800 transition-colors ml-3">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="flex space-x-2">
+                            <a href="/login/"
+                               class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors duration-300 font-medium">
+                                <i class="fas fa-sign-in-alt mr-1"></i>Login
+                            </a>
+                            <a href="/register/"
+                               class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg transition-colors duration-300 font-medium">
+                                <i class="fas fa-user-plus mr-1"></i>Register
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="container mx-auto px-6 py-8">
+    {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+                <div class="alert bg-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-500 text-white px-6 py-3 rounded-lg mb-3">
+                    <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %} mr-2"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% block content %}
+    {% endblock %}
+</main>
+
+<!-- Mobile Navigation -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
+    <div class="flex justify-around">
+        <a href="/home/" class="flex flex-col items-center py-2 text-gray-600">
+            <i class="fas fa-home text-xl"></i>
+            <span class="text-xs mt-1">Home</span>
+        </a>
+        {% if user.is_authenticated %}
+            <a href="/my-tweets/" class="flex flex-col items-center py-2 text-gray-600">
+                <i class="fas fa-edit text-xl"></i>
+                <span class="text-xs mt-1">My Tweets</span>
+            </a>
+            <a href="/profile/" class="flex flex-col items-center py-2 text-gray-600">
+                <i class="fas fa-user text-xl"></i>
+                <span class="text-xs mt-1">Profile</span>
+            </a>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

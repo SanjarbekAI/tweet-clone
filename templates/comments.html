@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}My Comments - Tweet System{% endblock %}
+
+{% block content %}
+    <div class="max-w-4xl mx-auto">
+        <!-- Page Header -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">My Comments</h1>
+                    <p class="text-gray-600 mt-1">Manage all your comments and replies</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-2xl font-bold text-indigo-600">{{ comments.count }}</p>
+                    <p class="text-gray-500 text-sm">Total Comments</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter and Search -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                <div class="flex items-center space-x-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Filter & Search</h3>
+                </div>
+                <div class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3">
+                    <input type="text"
+                           id="search-comments"
+                           placeholder="Search your comments..."
+                           class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    <select id="sort-comments"
+                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="most-liked">Most Liked</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments List -->
+        <div class="space-y-6" id="comments-container">
+            {% for comment in comments %}
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden comment-item"
+                     data-comment-id="{{ comment.id }}">
+                    <!-- Comment Header -->
+                    <div class="p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                                    {{ user.username|first|upper }}
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-semibold text-gray-900">{{ user.username }}</span>
+                                        <span class="text-gray-500">replied to</span>
+                                        <a href="/user/{{ comment.tweet.user.username }}/"
+                                           class="font-semibold text-indigo-600 hover:text-indigo-800">
+                                            @{{ comment.tweet.user.username }}
+                                        </a>
+                                    </div>
+                                    <p class="text-gray-500 text-sm">{{ comment.created_at|date:"M d, Y" }}
+                                        at {{ comment.created_at|time:"g:i A" }}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-2">
+                                <a href="/edit-comment/{{ comment.id }}/"
+                                   class="text-blue-500 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition-all"
+                                   title="Edit Comment">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST" action="/delete-comment/{{ comment.id }}/" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            onclick="return confirm('Are you sure you want to delete this comment?')"
+                                            class="text-red-500 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-all"
+                                            title="Delete Comment">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Original Tweet Context -->
+                        <div class="bg-gray-50 rounded-lg p-4 mb-4 border-l-4 border-indigo-500">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-xs">
+                                    {{ comment.tweet.user.username|first|upper }}
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-semibold text-gray-800">{{ comment.tweet.user.username }}</span>
+                                        <span class="text-gray-500 text-sm">{{ comment.tweet.created_at|timesince }} ago</span>
+                                    </div>
+                                    <p class="text-gray-700 text-sm mt-1">{{ comment.tweet.content|truncatechars:100 }}</p>
+                                </div>
+                            </div>
+                            <a href="/tweet/{{ comment.tweet.id }}/"
+                               class="text-indigo-600 hover:text-indigo-800 text-sm mt-2 inline-block">
+                                <i class="fas fa-external-link-alt mr-1"></i>View full tweet
+                            </a>
+                        </div>
+
+                        <!-- Comment Content -->
+                        <div class="mb-4">
+                            <p class="text-gray-800 leading-relaxed">{{ comment.content }}</p>
+                        </div>
+
+                        <!-- Comment Stats -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <span class="flex items-center space-x-1 text-gray-500">
+                                    <i class="fas fa-heart text-red-500"></i>
+                                    <span>{{ comment.likes_count }}</span>
+                                    <span class="text-sm">likes</span>
+                                </span>
+                                <a href="/tweet/{{ comment.tweet.id }}/#comment-{{ comment.id }}"
+                                   class="text-indigo-600 hover:text-indigo-800 text-sm">
+                                    <i class="fas fa-reply mr-1"></i>View in context
+                                </a>
+                            </div>
+                            <span class="text-xs text-gray-400">Comment ID: {{ comment.id }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="bg-white rounded-2xl shadow-lg p-12 text-center">
+                    <i class="fas fa-comments text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No comments yet</h3>
+                    <p class="text-gray-500 mb-6">Start engaging with tweets to see your comments here!</p>
+                    <a href="/home/"
+                       class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                        <i class="fas fa-home mr-2"></i>Go to Home Feed
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // Search functionality
+        document.getElementById('search-comments').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const comments = document.querySelectorAll('.comment-item');
+
+            comments.forEach(comment => {
+                const content = comment.querySelector('p').textContent.toLowerCase();
+                if (content.includes(searchTerm)) {
+                    comment.style.display = 'block';
+                } else {
+                    comment.style.display = 'none';
+                }
+            });
+        });
+
+        // Sort functionality
+        document.getElementById('sort-comments').addEventListener('change', function () {
+            const sortBy = this.value;
+            const container = document.getElementById('comments-container');
+            const comments = Array.from(container.querySelectorAll('.comment-item'));
+
+            comments.sort((a, b) => {
+                switch (sortBy) {
+                    case 'newest':
+                        return new Date(b.dataset.createdAt) - new Date(a.dataset.createdAt);
+                    case 'oldest':
+                        return new Date(a.dataset.createdAt) - new Date(b.dataset.createdAt);
+                    case 'most-liked':
+                        const aLikes = parseInt(a.querySelector('.fa-heart').nextElementSibling.textContent);
+                        const bLikes = parseInt(b.querySelector('.fa-heart').nextElementSibling.textContent);
+                        return bLikes - aLikes;
+                    default:
+                        return 0;
+                }
+            });
+
+            comments.forEach(comment => container.appendChild(comment));
+        });
+    </script>
+{% endblock %}
